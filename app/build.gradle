@@ -1,0 +1,58 @@
+plugins {
+    // Apply the application plugin to add support for building a CLI application in Java.
+    id 'application'
+    id 'com.github.sherter.google-java-format' version '0.9'
+}
+
+repositories {
+    // Use Maven Central for resolving dependencies.
+    mavenCentral()
+    maven {
+        url "https://artifacts.consensys.net/public/teku/maven/"
+    }
+    maven {
+        url "https://artifacts.consensys.net/public/maven/maven/"
+    }
+
+}
+
+dependencies {
+    implementation 'info.picocli:picocli:4.6.1'
+    annotationProcessor 'info.picocli:picocli-codegen:4.6.1'
+
+    implementation 'org.slf4j:slf4j-api:1.7.30'
+    runtimeOnly 'org.slf4j:slf4j-simple:1.7.30'
+    runtimeOnly 'org.apache.logging.log4j:log4j-to-slf4j:2.14.1'
+
+    implementation('tech.pegasys.teku.internal:bls:21.4.0') {
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+    }
+    runtimeOnly 'org.bouncycastle:bcprov-jdk15on:1.66'
+
+    implementation 'org.apache.tuweni:tuweni-bytes:1.0.0'
+    implementation 'org.apache.tuweni:tuweni-crypto:1.0.0'
+    implementation 'org.apache.tuweni:tuweni-ssz:1.0.0'
+    implementation 'org.yaml:snakeyaml:1.28'
+
+
+    // Use JUnit Jupiter API for testing.
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
+
+    // Use JUnit Jupiter Engine for testing.
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+tasks.named('test') {
+    // Use junit platform for unit tests.
+    useJUnitPlatform()
+}
+
+compileJava {
+    options.compilerArgs += ["-Aproject=${project.group}/${project.name}"]
+}
+
+application {
+    // Define the main class for the application.
+    mainClass = 'web3signer.hashicorp.loader.App'
+}
+
