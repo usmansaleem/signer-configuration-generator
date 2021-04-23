@@ -54,7 +54,7 @@ public class Web3SignerYamlConfiguration {
     final Map<String, Object> map = new HashMap<>();
     map.put("type", "hashicorp");
     map.put("keyPath", uri.getPath());
-    map.put("secretName", "value");
+    map.put("keyName", "value");
     map.put("tlsEnabled", "https".equalsIgnoreCase(uri.getScheme()) ? "true" : "false");
     map.put("serverHost", uri.getHost());
     map.put("serverPort", uri.getPort());
