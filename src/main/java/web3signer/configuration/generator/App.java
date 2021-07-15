@@ -10,7 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package web3signer.hashicorp.loader;
+package web3signer.configuration.generator;
 
 import java.util.concurrent.Callable;
 import org.slf4j.Logger;
@@ -22,12 +22,12 @@ import picocli.CommandLine.ParameterException;
 import picocli.CommandLine.Spec;
 
 @Command(
-    name = "web3signer-configuration-loader",
+    name = "web3signer-configuration-generator",
     subcommands = {HashicorpSubcommand.class, RawSubcommand.class},
     mixinStandardHelpOptions = true,
     version = "1.0",
     description =
-        "Generate random BLS Keys and load them to Hashicorp and generates web3signer configuration files to access them.")
+        "Generate random BLS Keys and web3signer configuration files (and load them in vault)")
 public class App implements Callable<Integer> {
   private static final Logger LOG = LoggerFactory.getLogger(App.class);
   @Spec CommandSpec spec;

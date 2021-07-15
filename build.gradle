@@ -47,7 +47,7 @@ tasks.named('test') {
 
 application {
     // Define the main class for the application.
-    mainClass = 'web3signer.hashicorp.loader.App'
+    mainClass = 'web3signer.configuration.generator.App'
 }
 
 spotless {
