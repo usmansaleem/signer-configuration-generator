@@ -67,7 +67,10 @@ public class Web3SignerYamlConfiguration {
         blsKeyPair -> {
           final Map<String, String> map =
               Map.of(
-                  "type", "raw", "privateKey", blsKeyPair.getSecretKey().toBytes().toHexString());
+                  "type",
+                  "file-raw",
+                  "privateKey",
+                  blsKeyPair.getSecretKey().toBytes().toHexString());
           final String content = new Yaml(DUMPER_OPTIONS).dump(map);
           final Path outputFile =
               outputDir.resolve(blsKeyPair.getPublicKey().toAbbreviatedString() + ".yaml");
