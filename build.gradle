@@ -1,7 +1,6 @@
 plugins {
-    // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
-    id 'com.github.sherter.google-java-format' version '0.9'
+    id "com.diffplug.spotless" version "5.14.1"
 }
 
 repositories {
@@ -34,7 +33,6 @@ dependencies {
     implementation 'org.apache.tuweni:tuweni-ssz:1.0.0'
     implementation 'org.yaml:snakeyaml:1.28'
 
-
     // Use JUnit Jupiter API for testing.
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
 
@@ -47,12 +45,18 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-compileJava {
-    options.compilerArgs += ["-Aproject=${project.group}/${project.name}"]
-}
-
 application {
     // Define the main class for the application.
     mainClass = 'web3signer.hashicorp.loader.App'
+}
+
+spotless {
+    java {
+        removeUnusedImports()
+        googleJavaFormat()
+        trimTrailingWhitespace()
+        endWithNewline()
+        licenseHeaderFile "${rootDir}/gradle/spotless-java-license.txt"
+    }
 }
 

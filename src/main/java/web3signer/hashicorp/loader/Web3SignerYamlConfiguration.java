@@ -12,20 +12,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
+import tech.pegasys.teku.bls.BLSKeyPair;
 
 public class Web3SignerYamlConfiguration {
   private static final Logger LOG = LoggerFactory.getLogger(Web3SignerYamlConfiguration.class);
-  private final URI hashicorpApiEndpoint;
   private final Path outputDir;
-  private final String token;
-  private final DumperOptions options = new DumperOptions();
+  private static final DumperOptions DUMPER_OPTIONS = new DumperOptions();
+  static {
+    DUMPER_OPTIONS.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+  }
 
-  public Web3SignerYamlConfiguration(
-      final URI hashicorpApiEndpoint, final Path outputDir, final String token) {
-    this.hashicorpApiEndpoint = hashicorpApiEndpoint;
+  public Web3SignerYamlConfiguration(final Path outputDir) {
     this.outputDir = outputDir;
-    this.token = token;
-    options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
     LOG.debug("Creating output directory: {}", outputDir);
     try {
       Files.createDirectories(outputDir);
@@ -34,12 +32,12 @@ public class Web3SignerYamlConfiguration {
     }
   }
 
-  public void createHashicorpYamlConfigurationFiles(final Set<String> publicKeys) {
+  public void createHashicorpYamlConfigurationFiles(final Set<String> publicKeys, final URI hashicorpApiEndpoint, final String token) {
     publicKeys.forEach(
         publicKey -> {
           final URI secretsEndpoint =
               URI.create(hashicorpApiEndpoint.toString() + "/data/" + publicKey).normalize();
-          final String content = getHashicorpYamlConfiguration(secretsEndpoint);
+          final String content = getHashicorpYamlConfiguration(secretsEndpoint, token);
           final Path outputFile = outputDir.resolve(publicKey + ".yaml");
           try {
             Files.writeString(outputFile, content);
@@ -49,7 +47,22 @@ public class Web3SignerYamlConfiguration {
         });
   }
 
-  private String getHashicorpYamlConfiguration(final URI uri) {
+  public void createRawYamlConfigurationFiles(final Set<BLSKeyPair> blsKeyPairs) {
+    // create configuration file
+    blsKeyPairs.forEach(blsKeyPair -> {
+      final Map<String, String> map = Map.of("type", "raw", "privateKey", blsKeyPair.getSecretKey().toBytes().toHexString());
+      final String content = new Yaml(DUMPER_OPTIONS).dump(map);
+      final Path outputFile = outputDir.resolve(blsKeyPair.getPublicKey().toAbbreviatedString() + ".yaml");
+      try {
+        Files.writeString(outputFile, content);
+      } catch (IOException e) {
+        LOG.error("Error creating configuration file {}: {}", outputFile, e.getMessage());
+      }
+    });
+
+  }
+
+  private String getHashicorpYamlConfiguration(final URI uri, final String token) {
     // create configuration file
     final Map<String, Object> map = new HashMap<>();
     map.put("type", "hashicorp");
@@ -60,6 +73,6 @@ public class Web3SignerYamlConfiguration {
     map.put("serverPort", uri.getPort());
     map.put("token", token);
 
-    return new Yaml(options).dump(map);
+    return new Yaml(DUMPER_OPTIONS).dump(map);
   }
 }
