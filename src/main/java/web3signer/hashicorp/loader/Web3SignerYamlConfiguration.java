@@ -1,3 +1,15 @@
+/*
+ * Copyright 2021 Usman Saleem.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package web3signer.hashicorp.loader;
 
 import java.io.IOException;
@@ -18,6 +30,7 @@ public class Web3SignerYamlConfiguration {
   private static final Logger LOG = LoggerFactory.getLogger(Web3SignerYamlConfiguration.class);
   private final Path outputDir;
   private static final DumperOptions DUMPER_OPTIONS = new DumperOptions();
+
   static {
     DUMPER_OPTIONS.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
   }
@@ -32,7 +45,8 @@ public class Web3SignerYamlConfiguration {
     }
   }
 
-  public void createHashicorpYamlConfigurationFiles(final Set<String> publicKeys, final URI hashicorpApiEndpoint, final String token) {
+  public void createHashicorpYamlConfigurationFiles(
+      final Set<String> publicKeys, final URI hashicorpApiEndpoint, final String token) {
     publicKeys.forEach(
         publicKey -> {
           final URI secretsEndpoint =
@@ -49,17 +63,20 @@ public class Web3SignerYamlConfiguration {
 
   public void createRawYamlConfigurationFiles(final Set<BLSKeyPair> blsKeyPairs) {
     // create configuration file
-    blsKeyPairs.forEach(blsKeyPair -> {
-      final Map<String, String> map = Map.of("type", "raw", "privateKey", blsKeyPair.getSecretKey().toBytes().toHexString());
-      final String content = new Yaml(DUMPER_OPTIONS).dump(map);
-      final Path outputFile = outputDir.resolve(blsKeyPair.getPublicKey().toAbbreviatedString() + ".yaml");
-      try {
-        Files.writeString(outputFile, content);
-      } catch (IOException e) {
-        LOG.error("Error creating configuration file {}: {}", outputFile, e.getMessage());
-      }
-    });
-
+    blsKeyPairs.forEach(
+        blsKeyPair -> {
+          final Map<String, String> map =
+              Map.of(
+                  "type", "raw", "privateKey", blsKeyPair.getSecretKey().toBytes().toHexString());
+          final String content = new Yaml(DUMPER_OPTIONS).dump(map);
+          final Path outputFile =
+              outputDir.resolve(blsKeyPair.getPublicKey().toAbbreviatedString() + ".yaml");
+          try {
+            Files.writeString(outputFile, content);
+          } catch (IOException e) {
+            LOG.error("Error creating configuration file {}: {}", outputFile, e.getMessage());
+          }
+        });
   }
 
   private String getHashicorpYamlConfiguration(final URI uri, final String token) {

@@ -56,7 +56,7 @@ spotless {
         googleJavaFormat()
         trimTrailingWhitespace()
         endWithNewline()
-        licenseHeaderFile "${rootDir}/gradle/spotless-java-license.txt"
+        licenseHeaderFile "${rootDir}/gradle/spotless.java.license"
     }
 }
 
