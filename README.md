@@ -1,6 +1,6 @@
-# web3signer-hashicorp-loader
+# web3signer-configuration-generator
 
-Utility to generate a large number of BLS Key Pair and corresponding Web3Signer Configuration files.
+Utility to generate a large number of BLS Key Pair and corresponding Web3Signer and EthSigner Configuration files.
 Supports raw files and hashicorp loading.
 
 ## build application:
