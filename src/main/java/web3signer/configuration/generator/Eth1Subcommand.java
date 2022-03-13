@@ -68,7 +68,8 @@ public class Eth1Subcommand implements Callable<Integer> {
       Files.writeString(tomlFile, toml);
       Files.writeString(passwordFile, password);
 
-      LOG.info("Generated EthSigner file based signer configuration files for address {}" + address);
+      LOG.info(
+          "Generated EthSigner file based signer configuration files for address {}" + address);
     }
 
     return 0;
