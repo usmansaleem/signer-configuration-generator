@@ -14,6 +14,7 @@ package web3signer.configuration.generator;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,7 @@ import web3signer.configuration.util.TomlStringBuilder;
 
 @CommandLine.Command(name = "ethsigner")
 public class Eth1Subcommand implements Callable<Integer> {
-  private static final Logger LOG = LoggerFactory.getLogger(HashicorpSubcommand.class);
+  private static final Logger LOG = LoggerFactory.getLogger(Eth1Subcommand.class);
 
   @CommandLine.Option(
       names = "--output",
@@ -43,6 +44,13 @@ public class Eth1Subcommand implements Callable<Integer> {
       description = "Password for the encrypted v3 keystore. Default: ${DEFAULT-VALUE}")
   String password = "password";
 
+  @CommandLine.Option(
+      names = "--override-path-in-config",
+      description =
+          "Override directory path that contains password and v3 keystore files to be used in configuration toml file."
+              + "For example /var/config/keys")
+  Optional<Path> overridePathInConfig = Optional.empty();
+
   @Override
   public Integer call() throws Exception {
     LOG.info("Creating output directory: {}", outputDir);
@@ -52,24 +60,35 @@ public class Eth1Subcommand implements Callable<Integer> {
     for (int i = 0; i < count; i++) {
       final ECKeyPair ecKeyPair = Keys.createEcKeyPair();
       final String address = Keys.getAddress(ecKeyPair);
-      final String fileName =
+      final String v3KeystorefileName =
           WalletUtils.generateWalletFile(password, ecKeyPair, outputDir.toFile(), true);
+      final String passwordFileName = address + ".password";
+      final String ethSignerTomlFileName = address + ".toml";
 
-      final Path keyFile = outputDirCreated.resolve(fileName).toAbsolutePath();
-      final Path passwordFile = outputDirCreated.resolve(address + ".password").toAbsolutePath();
-      final Path tomlFile = outputDirCreated.resolve(address + ".toml").toAbsolutePath();
+      final Path v3PathInToml;
+      final Path passwordPathInToml;
 
+      if (overridePathInConfig.isEmpty()) {
+        v3PathInToml = outputDirCreated.resolve(v3KeystorefileName).toAbsolutePath();
+        passwordPathInToml = outputDirCreated.resolve(passwordFileName).toAbsolutePath();
+      } else {
+        v3PathInToml = overridePathInConfig.get().resolve(v3KeystorefileName).toAbsolutePath();
+        passwordPathInToml = overridePathInConfig.get().resolve(passwordFileName).toAbsolutePath();
+      }
+
+      // create toml config file content
       final String toml =
           new TomlStringBuilder("signing")
               .withQuotedString("type", "file-based-signer")
-              .withQuotedString("key-file", keyFile.toString())
-              .withQuotedString("password-file", passwordFile.toString())
+              .withQuotedString("key-file", v3PathInToml.toString())
+              .withQuotedString("password-file", passwordPathInToml.toString())
               .build();
-      Files.writeString(tomlFile, toml);
-      Files.writeString(passwordFile, password);
 
-      LOG.info(
-          "Generated EthSigner file based signer configuration files for address {}" + address);
+      // write files to outputDir
+      Files.writeString(outputDirCreated.resolve(ethSignerTomlFileName), toml);
+      Files.writeString(outputDirCreated.resolve(passwordFileName), password);
+
+      LOG.info("Generated EthSigner file-based-signer configuration files for address {}", address);
     }
 
     return 0;
