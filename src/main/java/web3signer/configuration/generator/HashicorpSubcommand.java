@@ -14,6 +14,7 @@ package web3signer.configuration.generator;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import org.slf4j.Logger;
@@ -65,7 +66,7 @@ public class HashicorpSubcommand implements Callable<Integer> {
     final Set<BLSKeyPair> blsKeyPairs = new BLSKeyGenerator().generate(count);
 
     LOG.info("Inserting into hashicorp...");
-    final Set<String> publicKeys = hashicorpVaultClient.insertSecret(blsKeyPairs);
+    final List<String> publicKeys = hashicorpVaultClient.insertSecret(blsKeyPairs);
 
     LOG.info("Creating Web3Signer configuration files in {}", outputDir);
 

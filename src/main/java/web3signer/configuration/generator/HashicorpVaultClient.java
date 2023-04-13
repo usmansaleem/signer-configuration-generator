@@ -17,6 +17,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -62,7 +63,7 @@ public class HashicorpVaultClient {
     return false;
   }
 
-  public Set<String> insertSecret(final Set<BLSKeyPair> blsKeys) {
+  public List<String> insertSecret(final Set<BLSKeyPair> blsKeys) {
     return blsKeys.stream()
         .map(
             blsKeyPair -> {
@@ -94,7 +95,7 @@ public class HashicorpVaultClient {
               }
             })
         .filter(Objects::nonNull)
-        .collect(Collectors.toSet());
+        .collect(Collectors.toList());
   }
 
   private HttpRequest buildHttpRequest(final String privateKeyHex, final URI postURI) {

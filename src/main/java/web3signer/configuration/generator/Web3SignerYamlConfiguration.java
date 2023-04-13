@@ -18,6 +18,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
@@ -46,7 +47,7 @@ public class Web3SignerYamlConfiguration {
   }
 
   public void createHashicorpYamlConfigurationFiles(
-      final Set<String> publicKeys,
+      final List<String> publicKeys,
       final URI hashicorpApiEndpoint,
       final String token,
       final Path tlsKnownHosts) {
@@ -56,7 +57,12 @@ public class Web3SignerYamlConfiguration {
               URI.create(hashicorpApiEndpoint.toString() + "/data/" + publicKey).normalize();
           final String content =
               getHashicorpYamlConfiguration(secretsEndpoint, token, tlsKnownHosts);
-          final Path outputFile = outputDir.resolve(publicKey + ".yaml");
+          Path outputFile = outputDir.resolve(publicKey + ".yaml");
+          int counter = 1;
+          while (Files.exists(outputFile)) {
+            outputFile = outputDir.resolve(publicKey + "-" + counter + ".yaml");
+            counter++;
+          }
           try {
             Files.writeString(outputFile, content);
           } catch (IOException e) {
@@ -76,8 +82,13 @@ public class Web3SignerYamlConfiguration {
                   "privateKey",
                   blsKeyPair.getSecretKey().toBytes().toHexString());
           final String content = new Yaml(DUMPER_OPTIONS).dump(map);
-          final Path outputFile =
-              outputDir.resolve(blsKeyPair.getPublicKey().toAbbreviatedString() + ".yaml");
+          final String publicKey = blsKeyPair.getPublicKey().toAbbreviatedString();
+          Path outputFile = outputDir.resolve(publicKey + ".yaml");
+          int counter = 1;
+          while (Files.exists(outputFile)) {
+            outputFile = outputDir.resolve(publicKey + "-" + counter + ".yaml");
+            counter++;
+          }
           try {
             Files.writeString(outputFile, content);
           } catch (IOException e) {
