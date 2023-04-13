@@ -49,6 +49,11 @@ public class HashicorpSubcommand implements Callable<Integer> {
       required = true)
   private String token;
 
+  @CommandLine.Option(
+      names = "--tls-knownhosts-file",
+      description = "Path to tls known hosts file that needs to go in the configuration file.")
+  private Path tlsKnownHosts = Path.of("/var/config/knownhosts");
+
   @Override
   public Integer call() throws Exception {
     final HashicorpVaultClient hashicorpVaultClient = new HashicorpVaultClient(hashicorpUrl, token);
@@ -68,7 +73,7 @@ public class HashicorpSubcommand implements Callable<Integer> {
       LOG.warn("No keys to create in output directory");
     } else {
       new Web3SignerYamlConfiguration(outputDir)
-          .createHashicorpYamlConfigurationFiles(publicKeys, hashicorpUrl, token);
+          .createHashicorpYamlConfigurationFiles(publicKeys, hashicorpUrl, token, tlsKnownHosts);
     }
 
     return 0;

@@ -46,12 +46,16 @@ public class Web3SignerYamlConfiguration {
   }
 
   public void createHashicorpYamlConfigurationFiles(
-      final Set<String> publicKeys, final URI hashicorpApiEndpoint, final String token) {
+      final Set<String> publicKeys,
+      final URI hashicorpApiEndpoint,
+      final String token,
+      final Path tlsKnownHosts) {
     publicKeys.forEach(
         publicKey -> {
           final URI secretsEndpoint =
               URI.create(hashicorpApiEndpoint.toString() + "/data/" + publicKey).normalize();
-          final String content = getHashicorpYamlConfiguration(secretsEndpoint, token);
+          final String content =
+              getHashicorpYamlConfiguration(secretsEndpoint, token, tlsKnownHosts);
           final Path outputFile = outputDir.resolve(publicKey + ".yaml");
           try {
             Files.writeString(outputFile, content);
@@ -82,7 +86,8 @@ public class Web3SignerYamlConfiguration {
         });
   }
 
-  private String getHashicorpYamlConfiguration(final URI uri, final String token) {
+  private String getHashicorpYamlConfiguration(
+      final URI uri, final String token, final Path tlsKnownHosts) {
     // create configuration file
     final Map<String, Object> map = new HashMap<>();
     map.put("type", "hashicorp");
@@ -92,6 +97,10 @@ public class Web3SignerYamlConfiguration {
     map.put("serverHost", uri.getHost());
     map.put("serverPort", uri.getPort());
     map.put("token", token);
+
+    if ("https".equalsIgnoreCase(uri.getScheme())) {
+      map.put("tlsKnownServersPath", tlsKnownHosts.toString());
+    }
 
     return new Yaml(DUMPER_OPTIONS).dump(map);
   }
