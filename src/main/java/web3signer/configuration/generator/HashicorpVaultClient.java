@@ -68,6 +68,7 @@ public class HashicorpVaultClient {
             blsKeyPair -> {
               final String publicKeyHex =
                   blsKeyPair.getPublicKey().toBytesCompressed().toUnprefixedHexString();
+
               final String privateKeyHex =
                   blsKeyPair.getSecretKey().toBytes().toUnprefixedHexString();
               final URI postURI =
@@ -80,7 +81,7 @@ public class HashicorpVaultClient {
                     httpClient.send(httpRequestPost, HttpResponse.BodyHandlers.ofString());
                 final int statusCode = response.statusCode();
                 if (statusCode == 200) {
-                  return publicKeyHex;
+                  return blsKeyPair.getPublicKey().toAbbreviatedString();
                 } else {
                   LOG.warn("Invalid status code from Hashicorp for {}: {}", postURI, statusCode);
                   LOG.warn(response.body());
