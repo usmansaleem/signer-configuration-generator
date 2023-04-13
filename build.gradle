@@ -23,14 +23,15 @@ dependencies {
     runtimeOnly 'org.slf4j:slf4j-simple:1.7.30'
     runtimeOnly 'org.apache.logging.log4j:log4j-to-slf4j:2.17.1'
 
-    implementation('tech.pegasys.teku.internal:bls:21.4.0') {
+    implementation('tech.pegasys.teku.internal:bls:23.3.1') {
         exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
     }
+    runtimeOnly 'tech.pegasys:jblst:0.3.8'
     runtimeOnly 'org.bouncycastle:bcprov-jdk15on:1.70'
 
-    implementation 'org.apache.tuweni:tuweni-bytes:2.1.0'
-    implementation 'org.apache.tuweni:tuweni-crypto:2.1.0'
-    implementation 'org.apache.tuweni:tuweni-ssz:2.1.0'
+    implementation 'org.apache.tuweni:tuweni-bytes:2.3.1'
+    implementation 'org.apache.tuweni:tuweni-crypto:2.3.1'
+    implementation 'org.apache.tuweni:tuweni-ssz:2.3.1'
     implementation 'org.yaml:snakeyaml:1.28'
     implementation 'org.web3j:core:4.8.9'
 
