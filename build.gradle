@@ -19,9 +19,9 @@ dependencies {
     implementation 'info.picocli:picocli:4.6.2'
     annotationProcessor 'info.picocli:picocli-codegen:4.6.2'
 
-    implementation 'org.slf4j:slf4j-api:1.7.30'
-    runtimeOnly 'org.slf4j:slf4j-simple:1.7.30'
-    runtimeOnly 'org.apache.logging.log4j:log4j-to-slf4j:2.17.1'
+    implementation 'org.slf4j:slf4j-api:2.0.7'
+    runtimeOnly 'org.slf4j:slf4j-simple:2.0.7'
+    runtimeOnly 'org.apache.logging.log4j:log4j-to-slf4j:2.20.0'
 
     implementation('tech.pegasys.teku.internal:bls:23.3.1') {
         exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
@@ -32,7 +32,7 @@ dependencies {
     implementation 'org.apache.tuweni:tuweni-bytes:2.3.1'
     implementation 'org.apache.tuweni:tuweni-crypto:2.3.1'
     implementation 'org.apache.tuweni:tuweni-ssz:2.3.1'
-    implementation 'org.yaml:snakeyaml:1.28'
+    implementation 'org.yaml:snakeyaml:2.0'
     implementation 'org.web3j:core:4.8.9'
 
     // Use JUnit Jupiter API for testing.
