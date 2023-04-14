@@ -13,6 +13,7 @@
 package web3signer.configuration.generator;
 
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
@@ -45,10 +46,16 @@ public class HashicorpSubcommand implements Callable<Integer> {
   private URI hashicorpUrl = URI.create("http://localhost:8200/v1/secret");
 
   @CommandLine.Option(
-      names = {"--token"},
-      description = "Hashicorp token",
+      names = {"--override-vault-host"},
+      description =
+          "Override vault hostname in the generated configuration file. Useful for docker compose/k8")
+  private String overrideVaultHost = null;
+
+  @CommandLine.Option(
+      names = {"--token-file"},
+      description = "Path to file that contains Hashicorp token",
       required = true)
-  private String token;
+  private Path tokenFile;
 
   @CommandLine.Option(
       names = "--tls-knownhosts-file",
@@ -57,6 +64,7 @@ public class HashicorpSubcommand implements Callable<Integer> {
 
   @Override
   public Integer call() throws Exception {
+    final String token = Files.readString(tokenFile);
     final HashicorpVaultClient hashicorpVaultClient = new HashicorpVaultClient(hashicorpUrl, token);
     if (!hashicorpVaultClient.isInitialized()) {
       return -1;
@@ -74,7 +82,8 @@ public class HashicorpSubcommand implements Callable<Integer> {
       LOG.warn("No keys to create in output directory");
     } else {
       new Web3SignerYamlConfiguration(outputDir)
-          .createHashicorpYamlConfigurationFiles(publicKeys, hashicorpUrl, token, tlsKnownHosts);
+          .createHashicorpYamlConfigurationFiles(
+              publicKeys, hashicorpUrl, token, tlsKnownHosts, overrideVaultHost);
     }
 
     return 0;

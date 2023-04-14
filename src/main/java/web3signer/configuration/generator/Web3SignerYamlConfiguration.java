@@ -12,6 +12,7 @@
  */
 package web3signer.configuration.generator;
 
+import com.google.common.base.Strings;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
@@ -50,13 +51,15 @@ public class Web3SignerYamlConfiguration {
       final List<String> publicKeys,
       final URI hashicorpApiEndpoint,
       final String token,
-      final Path tlsKnownHosts) {
+      final Path tlsKnownHosts,
+      final String overrideVaultHost) {
     publicKeys.forEach(
         publicKey -> {
           final URI secretsEndpoint =
               URI.create(hashicorpApiEndpoint.toString() + "/data/" + publicKey).normalize();
           final String content =
-              getHashicorpYamlConfiguration(secretsEndpoint, token, tlsKnownHosts);
+              getHashicorpYamlConfiguration(
+                  secretsEndpoint, token, tlsKnownHosts, overrideVaultHost);
           Path outputFile = outputDir.resolve(publicKey + ".yaml");
           int counter = 1;
           while (Files.exists(outputFile)) {
@@ -98,19 +101,22 @@ public class Web3SignerYamlConfiguration {
   }
 
   private String getHashicorpYamlConfiguration(
-      final URI uri, final String token, final Path tlsKnownHosts) {
+      final URI uri, final String token, final Path tlsKnownHosts, final String overrideVaultHost) {
     // create configuration file
     final Map<String, Object> map = new HashMap<>();
     map.put("type", "hashicorp");
     map.put("keyPath", uri.getPath());
     map.put("keyName", "value");
-    map.put("tlsEnabled", "https".equalsIgnoreCase(uri.getScheme()) ? "true" : "false");
-    map.put("serverHost", uri.getHost());
+    map.put(
+        "serverHost", Strings.isNullOrEmpty(overrideVaultHost) ? uri.getHost() : overrideVaultHost);
     map.put("serverPort", uri.getPort());
     map.put("token", token);
 
     if ("https".equalsIgnoreCase(uri.getScheme())) {
+      map.put("tlsEnabled", "true");
       map.put("tlsKnownServersPath", tlsKnownHosts.toString());
+    } else {
+      map.put("tlsEnabled", "false");
     }
 
     return new Yaml(DUMPER_OPTIONS).dump(map);
