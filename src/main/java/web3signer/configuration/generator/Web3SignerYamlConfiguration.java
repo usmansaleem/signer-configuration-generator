@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import tech.pegasys.teku.bls.BLSKeyPair;
+import tech.pegasys.teku.bls.BLSPublicKey;
 
 public class Web3SignerYamlConfiguration {
   private static final Logger LOG = LoggerFactory.getLogger(Web3SignerYamlConfiguration.class);
@@ -48,30 +49,33 @@ public class Web3SignerYamlConfiguration {
   }
 
   public void createHashicorpYamlConfigurationFiles(
-      final List<String> publicKeys,
+      final List<BLSPublicKey> blsPublicKeys,
       final URI hashicorpApiEndpoint,
       final String token,
       final Path tlsKnownHosts,
       final String overrideVaultHost) {
-    publicKeys.forEach(
-        publicKey -> {
-          final URI secretsEndpoint =
-              URI.create(hashicorpApiEndpoint.toString() + "/data/" + publicKey).normalize();
-          final String content =
-              getHashicorpYamlConfiguration(
-                  secretsEndpoint, token, tlsKnownHosts, overrideVaultHost);
-          Path outputFile = outputDir.resolve(publicKey + ".yaml");
-          int counter = 1;
-          while (Files.exists(outputFile)) {
-            outputFile = outputDir.resolve(publicKey + "-" + counter + ".yaml");
-            counter++;
-          }
-          try {
-            Files.writeString(outputFile, content);
-          } catch (IOException e) {
-            LOG.error("Error creating configuration file {}: {}", outputFile, e.getMessage());
-          }
-        });
+    blsPublicKeys.parallelStream()
+        .forEach(
+            blsPublicKey -> {
+              final String publicKey = blsPublicKey.toBytesCompressed().toUnprefixedHexString();
+              final String abbrPublicKey = blsPublicKey.toAbbreviatedString();
+              final URI secretsEndpoint =
+                  URI.create(hashicorpApiEndpoint.toString() + "/data/" + publicKey).normalize();
+              final String content =
+                  getHashicorpYamlConfiguration(
+                      secretsEndpoint, token, tlsKnownHosts, overrideVaultHost);
+              Path outputFile = outputDir.resolve(abbrPublicKey + ".yaml");
+              int counter = 1;
+              while (Files.exists(outputFile)) {
+                outputFile = outputDir.resolve(abbrPublicKey + "-" + counter + ".yaml");
+                counter++;
+              }
+              try {
+                Files.writeString(outputFile, content);
+              } catch (IOException e) {
+                LOG.error("Error creating configuration file {}: {}", outputFile, e.getMessage());
+              }
+            });
   }
 
   public void createRawYamlConfigurationFiles(final Set<BLSKeyPair> blsKeyPairs) {

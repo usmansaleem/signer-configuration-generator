@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tech.pegasys.teku.bls.BLSKeyPair;
+import tech.pegasys.teku.bls.BLSPublicKey;
 
 public class HashicorpVaultClient {
   private static final Logger LOG = LoggerFactory.getLogger(HashicorpVaultClient.class);
@@ -63,12 +64,12 @@ public class HashicorpVaultClient {
     return false;
   }
 
-  public List<String> insertSecret(final Set<BLSKeyPair> blsKeys) {
+  public List<BLSPublicKey> insertSecret(final Set<BLSKeyPair> blsKeys) {
     return blsKeys.parallelStream()
         .map(
             blsKeyPair -> {
-              final String publicKeyHex =
-                  blsKeyPair.getPublicKey().toBytesCompressed().toUnprefixedHexString();
+              final BLSPublicKey publicKey = blsKeyPair.getPublicKey();
+              final String publicKeyHex = publicKey.toBytesCompressed().toUnprefixedHexString();
 
               final String privateKeyHex =
                   blsKeyPair.getSecretKey().toBytes().toUnprefixedHexString();
@@ -82,7 +83,7 @@ public class HashicorpVaultClient {
                     httpClient.send(httpRequestPost, HttpResponse.BodyHandlers.ofString());
                 final int statusCode = response.statusCode();
                 if (statusCode == 200) {
-                  return blsKeyPair.getPublicKey().toAbbreviatedString();
+                  return publicKey;
                 } else {
                   LOG.warn("Invalid status code from Hashicorp for {}: {}", postURI, statusCode);
                   LOG.warn(response.body());

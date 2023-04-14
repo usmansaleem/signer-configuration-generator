@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import tech.pegasys.teku.bls.BLSKeyPair;
+import tech.pegasys.teku.bls.BLSPublicKey;
 
 @Command(name = "hashicorp")
 public class HashicorpSubcommand implements Callable<Integer> {
@@ -74,7 +75,7 @@ public class HashicorpSubcommand implements Callable<Integer> {
     final Set<BLSKeyPair> blsKeyPairs = new BLSKeyGenerator().generate(count);
 
     LOG.info("Inserting into hashicorp...");
-    final List<String> publicKeys = hashicorpVaultClient.insertSecret(blsKeyPairs);
+    final List<BLSPublicKey> publicKeys = hashicorpVaultClient.insertSecret(blsKeyPairs);
     LOG.info("Data inserted into vault: {}", publicKeys.size());
     LOG.info("Creating Web3Signer configuration files in {}", outputDir);
 
