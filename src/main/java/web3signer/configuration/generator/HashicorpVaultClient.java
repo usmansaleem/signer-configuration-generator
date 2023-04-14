@@ -64,7 +64,7 @@ public class HashicorpVaultClient {
   }
 
   public List<String> insertSecret(final Set<BLSKeyPair> blsKeys) {
-    return blsKeys.stream()
+    return blsKeys.parallelStream()
         .map(
             blsKeyPair -> {
               final String publicKeyHex =

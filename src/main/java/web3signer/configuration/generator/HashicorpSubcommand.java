@@ -75,7 +75,7 @@ public class HashicorpSubcommand implements Callable<Integer> {
 
     LOG.info("Inserting into hashicorp...");
     final List<String> publicKeys = hashicorpVaultClient.insertSecret(blsKeyPairs);
-
+    LOG.info("Data inserted into vault: {}", publicKeys.size());
     LOG.info("Creating Web3Signer configuration files in {}", outputDir);
 
     if (publicKeys.isEmpty()) {
