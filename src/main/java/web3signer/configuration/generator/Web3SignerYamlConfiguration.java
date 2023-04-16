@@ -59,7 +59,7 @@ public class Web3SignerYamlConfiguration {
     blsPublicKeys.parallelStream()
         .forEach(
             blsPublicKey -> {
-              System.out.printf("Creating %d configuration file ...", count.incrementAndGet());
+              System.out.printf("\rCreating configuration file: %d ...", count.incrementAndGet());
               final String publicKey = blsPublicKey.toBytesCompressed().toUnprefixedHexString();
               final String abbrPublicKey = blsPublicKey.toAbbreviatedString();
               final URI secretsEndpoint =
@@ -78,9 +78,8 @@ public class Web3SignerYamlConfiguration {
               } catch (IOException e) {
                 LOG.error("Error creating configuration file {}: {}", outputFile, e.getMessage());
               }
-              System.out.print("\r");
             });
-    System.out.println();
+    System.out.println("\nConfiguration files created.");
   }
 
   public void createRawYamlConfigurationFiles(final Set<BLSKeyPair> blsKeyPairs) {

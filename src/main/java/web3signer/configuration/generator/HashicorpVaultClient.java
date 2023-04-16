@@ -71,7 +71,7 @@ public class HashicorpVaultClient {
         blsKeys.parallelStream()
             .map(
                 blsKeyPair -> {
-                  System.out.printf("Inserting %d key in vault ...", count.incrementAndGet());
+                  System.out.printf("\rInserting key in vault: %d ...", count.incrementAndGet());
                   final BLSPublicKey publicKey = blsKeyPair.getPublicKey();
                   final String publicKeyHex = publicKey.toBytesCompressed().toUnprefixedHexString();
 
@@ -88,7 +88,6 @@ public class HashicorpVaultClient {
                     final HttpResponse<String> response =
                         httpClient.send(httpRequestPost, HttpResponse.BodyHandlers.ofString());
                     final int statusCode = response.statusCode();
-                    System.out.print("\r");
                     if (statusCode == 200) {
                       return publicKey;
                     } else {
@@ -105,7 +104,7 @@ public class HashicorpVaultClient {
                 })
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
-    System.out.println();
+    System.out.println("\nData inserted in vault.");
     return blsPublicKeys;
   }
 
