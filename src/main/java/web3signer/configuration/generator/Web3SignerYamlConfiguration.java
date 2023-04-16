@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.DumperOptions;
@@ -54,9 +55,11 @@ public class Web3SignerYamlConfiguration {
       final String token,
       final Path tlsKnownHosts,
       final String overrideVaultHost) {
+    final AtomicInteger count = new AtomicInteger(0);
     blsPublicKeys.parallelStream()
         .forEach(
             blsPublicKey -> {
+              System.out.printf("Creating %d configuration file ...", count.incrementAndGet());
               final String publicKey = blsPublicKey.toBytesCompressed().toUnprefixedHexString();
               final String abbrPublicKey = blsPublicKey.toAbbreviatedString();
               final URI secretsEndpoint =
@@ -75,7 +78,9 @@ public class Web3SignerYamlConfiguration {
               } catch (IOException e) {
                 LOG.error("Error creating configuration file {}: {}", outputFile, e.getMessage());
               }
+              System.out.print("\r");
             });
+    System.out.println();
   }
 
   public void createRawYamlConfigurationFiles(final Set<BLSKeyPair> blsKeyPairs) {

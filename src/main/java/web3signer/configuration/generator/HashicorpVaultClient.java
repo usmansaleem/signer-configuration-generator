@@ -20,6 +20,7 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,38 +66,47 @@ public class HashicorpVaultClient {
   }
 
   public List<BLSPublicKey> insertSecret(final Set<BLSKeyPair> blsKeys) {
-    return blsKeys.parallelStream()
-        .map(
-            blsKeyPair -> {
-              final BLSPublicKey publicKey = blsKeyPair.getPublicKey();
-              final String publicKeyHex = publicKey.toBytesCompressed().toUnprefixedHexString();
+    final AtomicInteger count = new AtomicInteger(0);
+    List<BLSPublicKey> blsPublicKeys =
+        blsKeys.parallelStream()
+            .map(
+                blsKeyPair -> {
+                  System.out.printf("Inserting %d key in vault ...", count.incrementAndGet());
+                  final BLSPublicKey publicKey = blsKeyPair.getPublicKey();
+                  final String publicKeyHex = publicKey.toBytesCompressed().toUnprefixedHexString();
 
-              final String privateKeyHex =
-                  blsKeyPair.getSecretKey().toBytes().toUnprefixedHexString();
-              final URI postURI =
-                  URI.create(hashicorpApiEndpoint.toString() + "/data/" + publicKeyHex).normalize();
-              LOG.debug("Submitting to {}", postURI);
+                  final String privateKeyHex =
+                      blsKeyPair.getSecretKey().toBytes().toUnprefixedHexString();
+                  final URI postURI =
+                      URI.create(hashicorpApiEndpoint.toString() + "/data/" + publicKeyHex)
+                          .normalize();
+                  LOG.debug("Submitting to {}", postURI);
 
-              final HttpRequest httpRequestPost = buildHttpRequest(privateKeyHex, postURI);
-              try {
-                final HttpResponse<String> response =
-                    httpClient.send(httpRequestPost, HttpResponse.BodyHandlers.ofString());
-                final int statusCode = response.statusCode();
-                if (statusCode == 200) {
-                  return publicKey;
-                } else {
-                  LOG.warn("Invalid status code from Hashicorp for {}: {}", postURI, statusCode);
-                  LOG.warn(response.body());
-                  return null;
-                }
+                  final HttpRequest httpRequestPost = buildHttpRequest(privateKeyHex, postURI);
+                  try {
 
-              } catch (IOException | InterruptedException e) {
-                LOG.error("Posting secret to {} failed: {}", postURI, e.getMessage());
-                return null;
-              }
-            })
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+                    final HttpResponse<String> response =
+                        httpClient.send(httpRequestPost, HttpResponse.BodyHandlers.ofString());
+                    final int statusCode = response.statusCode();
+                    System.out.print("\r");
+                    if (statusCode == 200) {
+                      return publicKey;
+                    } else {
+                      LOG.warn(
+                          "Invalid status code from Hashicorp for {}: {}", postURI, statusCode);
+                      LOG.warn(response.body());
+                      return null;
+                    }
+
+                  } catch (IOException | InterruptedException e) {
+                    LOG.error("Posting secret to {} failed: {}", postURI, e.getMessage());
+                    return null;
+                  }
+                })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+    System.out.println();
+    return blsPublicKeys;
   }
 
   private HttpRequest buildHttpRequest(final String privateKeyHex, final URI postURI) {
