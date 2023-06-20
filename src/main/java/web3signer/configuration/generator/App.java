@@ -20,12 +20,13 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.ParameterException;
 import picocli.CommandLine.Spec;
+import web3signer.configuration.util.VersionProvider;
 
 @Command(
     name = "web3signer-configuration-generator",
     subcommands = {HashicorpSubcommand.class, RawSubcommand.class, Eth1Subcommand.class},
     mixinStandardHelpOptions = true,
-    version = "1.0",
+    versionProvider = VersionProvider.class,
     description =
         "Generate random BLS Keys and web3signer configuration files (and load them in vault)")
 public class App implements Callable<Integer> {
