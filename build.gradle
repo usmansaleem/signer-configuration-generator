@@ -57,6 +57,18 @@ application {
     mainClass = 'web3signer.configuration.generator.App'
 }
 
+jar {
+  archiveBaseName = rootProject.name
+  manifest {
+    attributes(
+      'Specification-Title': archiveBaseName,
+      'Specification-Version': project.version,
+      'Implementation-Title': archiveBaseName,
+      'Implementation-Version': calculateVersion()
+      )
+  }
+}
+
 spotless {
     java {
         removeUnusedImports()
@@ -65,13 +77,6 @@ spotless {
         endWithNewline()
         licenseHeaderFile "${rootDir}/gradle/spotless.java.license"
     }
-}
-
-// adds a grgit property to the project (will silently be null if there's no git repo)
-tasks.register("describe") {
-  doFirst {
-   println "********" + grgit.describe(tags:true)
-  }
 }
 
 // Calculate the version that this build would be published under (if it is published)
