@@ -79,8 +79,6 @@ tasks.register("describe") {
 // If this is on a release-* branch, use the most recent tag appended with +develop (e.g. 0.1.1-RC1+develop)
 // Otherwise, use develop
 def calculatePublishVersion() {
-
-
   if (!grgit) {
     return 'develop'
   }
