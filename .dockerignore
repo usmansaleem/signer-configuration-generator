@@ -2,6 +2,7 @@
 *
 
 # Allow following
+!.git/
 !gradle/
 !settings.gradle
 !gradle.properties

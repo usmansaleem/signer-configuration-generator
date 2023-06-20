@@ -24,8 +24,8 @@ FROM ubuntu:latest
 ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH "${JAVA_HOME}/bin:${PATH}"
 COPY --from=jre-build /javaruntime $JAVA_HOME
-COPY --from=app-build /opt/app/build/distributions/signer-configuration-generator.tar /opt/
-RUN tar -xvf /opt/signer-configuration-generator.tar -C /opt/ && rm /opt/signer-configuration-generator.tar
+COPY --from=app-build /opt/app/build/distributions/signer-configuration-generator.tar.gz /opt/
+RUN tar -xvzf /opt/signer-configuration-generator.tar.gz -C /opt/ && rm /opt/signer-configuration-generator.tar.gz
 WORKDIR /opt/signer-configuration-generator
 
 ENTRYPOINT ["/opt/signer-configuration-generator/bin/signer-configuration-generator"]
