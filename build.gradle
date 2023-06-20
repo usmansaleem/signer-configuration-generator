@@ -4,9 +4,9 @@ plugins {
     id "org.ajoberstar.grgit" version "5.2.0"
 }
 
-//rootProject.version = calculatePublishVersion()
-//def specificVersion = calculateVersion()
-//def isDevelopBuild = rootProject.version.contains('develop')
+rootProject.version = calculatePublishVersion()
+def specificVersion = calculateVersion()
+def isDevelopBuild = rootProject.version.contains('develop')
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -70,7 +70,7 @@ spotless {
 // adds a grgit property to the project (will silently be null if there's no git repo)
 tasks.register("describe") {
   doFirst {
-   println "********" + grgit.describe()
+   println "********" + grgit.describe(tags:true)
   }
 }
 
