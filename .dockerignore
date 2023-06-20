@@ -1,0 +1,10 @@
+# Ignore everything
+*
+
+# Allow following
+!gradle/
+!settings.gradle
+!gradle.properties
+!gradlew
+!build.gradle
+!/src/
