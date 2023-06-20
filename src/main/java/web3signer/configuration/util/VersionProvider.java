@@ -16,14 +16,16 @@ import picocli.CommandLine.IVersionProvider;
 
 public class VersionProvider implements IVersionProvider {
   private static final String CLIENT_IDENTITY = "signer-configuration-generator";
-  private static final String[] VERSION = new String[] {
-          CLIENT_IDENTITY
-          + "/v"
-          + VersionProvider.class.getPackage().getImplementationVersion()
-          + "/"
-          + PlatformDetector.getOS()
-          + "/"
-          + PlatformDetector.getVM()};
+  private static final String[] VERSION =
+      new String[] {
+        CLIENT_IDENTITY
+            + "/v"
+            + VersionProvider.class.getPackage().getImplementationVersion()
+            + "/"
+            + PlatformDetector.getOS()
+            + "/"
+            + PlatformDetector.getVM()
+      };
 
   @Override
   public String[] getVersion() {
