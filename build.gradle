@@ -1,12 +1,9 @@
+// See gradle/libs.versions.toml for the versions of the dependencies.
 plugins {
     id 'application'
-    id "com.diffplug.spotless" version "6.2.0"
-    id "org.ajoberstar.grgit" version "5.2.0"
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.jgitver)
 }
-
-rootProject.version = calculatePublishVersion()
-def specificVersion = calculateVersion()
-def isDevelopBuild = rootProject.version.contains('develop')
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -20,31 +17,30 @@ repositories {
 
 }
 
-dependencies {
-    implementation 'info.picocli:picocli:4.6.2'
-    annotationProcessor 'info.picocli:picocli-codegen:4.6.2'
-
-    implementation 'org.slf4j:slf4j-api:2.0.7'
-    runtimeOnly 'org.slf4j:slf4j-simple:2.0.7'
-    runtimeOnly 'org.apache.logging.log4j:log4j-to-slf4j:2.20.0'
-
-    implementation('tech.pegasys.teku.internal:bls:23.3.1') {
-        exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
     }
-    runtimeOnly 'tech.pegasys:jblst:0.3.8'
-    runtimeOnly 'org.bouncycastle:bcprov-jdk15on:1.70'
+}
 
-    implementation 'org.apache.tuweni:tuweni-bytes:2.3.1'
-    implementation 'org.apache.tuweni:tuweni-crypto:2.3.1'
-    implementation 'org.apache.tuweni:tuweni-ssz:2.3.1'
-    implementation 'org.yaml:snakeyaml:2.0'
-    implementation 'org.web3j:core:4.8.9'
+dependencies {
+    implementation libs.picocli
+    annotationProcessor libs.picocli.codegen
+
+    implementation libs.slf4j.api
+    runtimeOnly libs.slf4j.simple
+    runtimeOnly libs.log4j.slf4j.adapter
+
+    implementation libs.bundles.teku
+    implementation libs.jblst
+
+    implementation libs.tuweni.bytes
+    implementation libs.snakeyaml
 
     // Use JUnit Jupiter API for testing.
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    // Use JUnit Jupiter Engine for testing.
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 }
 
 tasks.named('test') {
@@ -58,25 +54,12 @@ application {
 }
 
 jar {
-  archiveBaseName = rootProject.name
-  manifest {
-    attributes(
-      'Specification-Title': archiveBaseName,
-      'Specification-Version': project.version,
-      'Implementation-Title': archiveBaseName,
-      'Implementation-Version': calculateVersion()
-      )
-  }
-}
-
-distTar {
-    compression = Compression.GZIP
-    archiveExtension = 'tar.gz'
-    archiveFileName = "${project.name}.tar.gz"
-}
-
-distZip {
-    archiveFileName = "${project.name}.zip"
+    doFirst {
+        manifest {
+            attributes 'X-GIT-SHA1' : "$project.ext.git_sha1_full"
+            attributes 'Implementation-Version': "$project.ext.calculated_version"
+        }
+    }
 }
 
 spotless {
@@ -89,47 +72,5 @@ spotless {
     }
 }
 
-// Calculate the version that this build would be published under (if it is published)
-// If this exact commit is tagged, use the tag
-// If this is on a release-* branch, use the most recent tag appended with +develop (e.g. 0.1.1-RC1+develop)
-// Otherwise, use develop
-def calculatePublishVersion() {
-  if (!grgit) {
-    return 'develop'
-  }
-  def specificVersion = calculateVersion()
-  def isReleaseBranch = grgit.branch.current().name.startsWith('release-')
-  if (specificVersion.contains('+')) {
-    return isReleaseBranch ? "${specificVersion.substring(0, specificVersion.indexOf('+'))}+develop" : "develop"
-  }
-  return specificVersion
-}
-
-def calculateVersion() {
-  if (!grgit) {
-    logger.warn("Not building from a git checkout. Version information will not be available. Building from a git checkout is strongly recommended.")
-    return 'UNKNOWN+develop'
-  }
-  String version = grgit.describe(tags: true)
-  if (version == null) {
-    return "NO_TAG+g${grgit.head().abbreviatedId}"
-  }
-  def versionPattern = ~/^(?<lastVersion>.*)-(?<devVersion>[0-9]+-g[a-z0-9]+)$/
-  def matcher = version =~ versionPattern
-  if (matcher.find()) {
-    return "${matcher.group("lastVersion")}+${matcher.group("devVersion")}"
-  }
-  return version
-}
-
-task printVersion() {
-  doFirst {
-    print "Specific version: ${specificVersion}  Publish version: ${project.version}"
-  }
-}
-
-def getCheckedOutGitCommitHash() {
-  def takeFromHash = 8
-  grgit ? grgit.head().id.take(takeFromHash) : 'UNKNOWN'
-}
+jgitver { nonQualifierBranches "main" }
 
