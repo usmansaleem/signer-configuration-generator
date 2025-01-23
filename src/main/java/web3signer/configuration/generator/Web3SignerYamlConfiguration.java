@@ -12,7 +12,6 @@
  */
 package web3signer.configuration.generator;
 
-import com.google.common.base.Strings;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
@@ -116,7 +115,10 @@ public class Web3SignerYamlConfiguration {
     map.put("keyPath", uri.getPath());
     map.put("keyName", "value");
     map.put(
-        "serverHost", Strings.isNullOrEmpty(overrideVaultHost) ? uri.getHost() : overrideVaultHost);
+        "serverHost",
+        overrideVaultHost == null || overrideVaultHost.isBlank()
+            ? uri.getHost()
+            : overrideVaultHost);
     map.put("serverPort", uri.getPort());
     map.put("token", token);
 

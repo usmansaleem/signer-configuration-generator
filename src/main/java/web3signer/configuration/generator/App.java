@@ -23,8 +23,8 @@ import picocli.CommandLine.Spec;
 import web3signer.configuration.util.VersionProvider;
 
 @Command(
-    name = "web3signer-configuration-generator",
-    subcommands = {HashicorpSubcommand.class, RawSubcommand.class, Eth1Subcommand.class},
+    name = "signer-configuration-generator",
+    subcommands = {HashicorpSubcommand.class, RawSubcommand.class},
     mixinStandardHelpOptions = true,
     versionProvider = VersionProvider.class,
     description =
