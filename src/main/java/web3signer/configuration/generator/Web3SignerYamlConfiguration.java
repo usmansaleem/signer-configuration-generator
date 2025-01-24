@@ -129,12 +129,10 @@ public class Web3SignerYamlConfiguration {
     }
 
     // create encrypted keystore files and configuration files
-    var fileCount = new AtomicLong(0);
-
     blsKeyPairs.parallelStream()
         .forEach(
             blsKeyPair -> {
-              var outputFileName = fileCount.incrementAndGet();
+              var outputFileName = BLSKeyGenerator.secureRandomString();
               var keystoreFileName = outputFileName + ".json";
               var configFileName = outputFileName + ".yaml";
 

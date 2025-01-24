@@ -4,7 +4,6 @@
 teku = "24.10.3"
 jblst = "0.3.12"
 spotless = "7.0.2"
-guava = "33.0.0-jre"
 junit-jupiter = "5.10.2"
 tuweni = "2.4.2"
 bouncycastle = "1.78.1"
@@ -13,6 +12,7 @@ slf4j = "2.0.16"
 log4j-slf4j-adapter = "2.24.3"
 snakeyaml = "2.3"
 jgitver = "0.10.0-rc03"
+jackson = "2.18.2"
 
 [libraries]
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
@@ -23,16 +23,19 @@ log4j-slf4j-adapter = { module = "org.apache.logging.log4j:log4j-to-slf4j", vers
 teku-bls = {module = "tech.pegasys.teku.internal:bls", version.ref = "teku"}
 teku-bls-keystore = {module = "tech.pegasys.teku.internal:bls-keystore", version.ref = "teku"}
 jblst = {module = "tech.pegasys:jblst", version.ref = "jblst"}
-guava = { module = "com.google.guava:guava", version.ref = "guava" }
 tuweni-bytes = { module = "io.tmio:tuweni-bytes", version.ref = "tuweni" }
 bc-prov = { module = "org.bouncycastle:bcprov-jdk15on", version.ref = "bouncycastle" }
 bc-pkix = { module = "org.bouncycastle:bcpkix-jdk15on", version.ref = "bouncycastle" }
 snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
+jackson-databind = {module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson"}
+jackson-dataformat-yaml = {module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson"}
+
 
 [bundles]
 bc = [ "bc-prov", "bc-pkix" ]
 teku = [ "teku-bls", "teku-bls-keystore" ]
+jackson = [ "jackson-databind", "jackson-dataformat-yaml" ]
 
 
 [plugins]
