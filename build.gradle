@@ -9,10 +9,10 @@ repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
     maven {
-        url "https://artifacts.consensys.net/public/teku/maven/"
+        url = uri("https://artifacts.consensys.net/public/teku/maven/")
     }
     maven {
-        url "https://artifacts.consensys.net/public/maven/maven/"
+        url = uri("https://artifacts.consensys.net/public/maven/maven/")
     }
 
 }
@@ -36,6 +36,7 @@ dependencies {
 
     implementation libs.tuweni.bytes
     implementation libs.snakeyaml
+    implementation libs.bundles.jackson
 
     // Use JUnit Jupiter API for testing.
     testImplementation libs.junit.jupiter
@@ -54,12 +55,9 @@ application {
 }
 
 jar {
-    doFirst {
         manifest {
-            attributes 'X-GIT-SHA1' : "$project.ext.git_sha1_full"
-            attributes 'Implementation-Version': "$project.ext.calculated_version"
+            attributes["Implementation-Version"] = project.version
         }
-    }
 }
 
 spotless {

@@ -12,6 +12,8 @@
  */
 package web3signer.configuration.generator;
 
+import static tech.pegasys.teku.bls.keystore.model.Pbkdf2PseudoRandomFunction.HMAC_SHA256;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
@@ -20,14 +22,23 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.tuweni.bytes.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import tech.pegasys.teku.bls.BLSKeyPair;
 import tech.pegasys.teku.bls.BLSPublicKey;
+import tech.pegasys.teku.bls.keystore.KeyStore;
+import tech.pegasys.teku.bls.keystore.KeyStoreLoader;
+import tech.pegasys.teku.bls.keystore.model.Cipher;
+import tech.pegasys.teku.bls.keystore.model.CipherFunction;
+import tech.pegasys.teku.bls.keystore.model.KdfParam;
+import tech.pegasys.teku.bls.keystore.model.KeyStoreData;
+import tech.pegasys.teku.bls.keystore.model.Pbkdf2Param;
 
 public class Web3SignerYamlConfiguration {
   private static final Logger LOG = LoggerFactory.getLogger(Web3SignerYamlConfiguration.class);
@@ -105,6 +116,79 @@ public class Web3SignerYamlConfiguration {
             LOG.error("Error creating configuration file {}: {}", outputFile, e.getMessage());
           }
         });
+  }
+
+  public void createKeystoreConfigurationFiles(
+      final Set<BLSKeyPair> blsKeyPairs, final Path keystoreDirInConfig) {
+    // create password file first
+    try {
+      Files.writeString(outputDir.resolve("password.txt"), "password");
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+
+    // create encrypted keystore files and configuration files
+    blsKeyPairs.parallelStream()
+        .forEach(
+            blsKeyPair -> {
+              var outputFileName = BLSKeyGenerator.secureRandomString();
+              var keystoreFileName = outputFileName + ".json";
+              var configFileName = outputFileName + ".yaml";
+
+              // generate keystore file
+              try {
+                createKeyStoreFile(
+                    blsKeyPair.getSecretKey().toBytes(),
+                    blsKeyPair.getPublicKey().toBytesCompressed(),
+                    "password",
+                    outputDir.resolve(keystoreFileName));
+              } catch (final IOException e) {
+                LOG.error(
+                    "Unable to create keystore file: {}. Error: {}",
+                    keystoreFileName,
+                    e.getMessage());
+                return;
+              }
+              var configFileMap =
+                  Map.of(
+                      "type",
+                      "file-keystore",
+                      "keyType",
+                      "BLS",
+                      "keystoreFile",
+                      Optional.ofNullable(keystoreDirInConfig)
+                          .orElse(outputDir)
+                          .resolve(keystoreFileName)
+                          .toString(), // json file
+                      "keystorePasswordFile",
+                      Optional.ofNullable(keystoreDirInConfig)
+                          .orElse(outputDir)
+                          .resolve("password.txt")
+                          .toString()); // password file
+              var content = new Yaml(DUMPER_OPTIONS).dump(configFileMap);
+              try {
+                Files.writeString(outputDir.resolve(configFileName), content);
+              } catch (IOException e) {
+                LOG.error(
+                    "Error creating configuration file {}: {}", configFileName, e.getMessage());
+              }
+            });
+  }
+
+  private void createKeyStoreFile(
+      final Bytes privateKey,
+      final Bytes publicKey,
+      final String password,
+      final Path keyStoreFilePath)
+      throws IOException {
+    final Bytes salt = Bytes.random(32, BLSKeyGenerator.getSecureRandom());
+    final Bytes iv = Bytes.random(16, BLSKeyGenerator.getSecureRandom());
+    final int counter = 65536; // 2^16
+    final KdfParam kdfParam = new Pbkdf2Param(32, counter, HMAC_SHA256, salt);
+    final Cipher cipher = new Cipher(CipherFunction.AES_128_CTR, iv);
+    final KeyStoreData keyStoreData =
+        KeyStore.encrypt(privateKey, publicKey, password, "", kdfParam, cipher);
+    KeyStoreLoader.saveToFile(keyStoreFilePath, keyStoreData);
   }
 
   private String getHashicorpYamlConfiguration(

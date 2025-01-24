@@ -13,17 +13,29 @@
 package web3signer.configuration.generator;
 
 import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import tech.pegasys.teku.bls.BLSKeyPair;
 
 public class BLSKeyGenerator {
-  private final SecureRandom secureRandom = new SecureRandom();
+  private static final SecureRandom secureRandom = new SecureRandom();
+  private static final Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
 
   public Set<BLSKeyPair> generate(final int count) {
     return IntStream.range(0, count)
         .mapToObj(i -> BLSKeyPair.random(secureRandom))
         .collect(Collectors.toSet());
+  }
+
+  public static SecureRandom getSecureRandom() {
+    return secureRandom;
+  }
+
+  public static String secureRandomString() {
+    var buffer = new byte[20];
+    secureRandom.nextBytes(buffer);
+    return encoder.encodeToString(buffer);
   }
 }
