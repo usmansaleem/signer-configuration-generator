@@ -19,11 +19,15 @@ import java.util.stream.IntStream;
 import tech.pegasys.teku.bls.BLSKeyPair;
 
 public class BLSKeyGenerator {
-  private final SecureRandom secureRandom = new SecureRandom();
+  private static final SecureRandom secureRandom = new SecureRandom();
 
   public Set<BLSKeyPair> generate(final int count) {
     return IntStream.range(0, count)
         .mapToObj(i -> BLSKeyPair.random(secureRandom))
         .collect(Collectors.toSet());
+  }
+
+  public static SecureRandom getSecureRandom() {
+    return secureRandom;
   }
 }
