@@ -56,3 +56,40 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  release:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build with Gradle
+        run: ./gradlew clean distTar
+
+      # Create release tag and attach the distribution
+      # https://github.com/marketplace/actions/gh-release
+      - name: Release
+        id: release
+        uses: softprops/action-gh-release@v2.2.1
+        with:
+          files: |
+            build/distributions/*.tar.gz
+          body: |
+            ## Signer Configuration Generator - Release
+          draft: true
+          preserve_order: true
