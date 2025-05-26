@@ -53,7 +53,7 @@ COPY --from=builder \
 
 RUN mkdir -p /app \
  && tar --strip-components=1 -xzf /tmp/signer.tar.gz -C /app \
- && rm /tmp/signer.ta.gzr \
+ && rm /tmp/signer.tar.gz \
  && chmod +x /app/bin/signer-configuration-generator
 
 # 3. Switch to a non-root user (optional, but recommended)
