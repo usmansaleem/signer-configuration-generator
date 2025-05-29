@@ -71,18 +71,13 @@ public class Web3SignerYamlConfiguration {
             blsPublicKey -> {
               System.out.printf("\rCreating configuration file: %d ...", count.incrementAndGet());
               final String publicKey = blsPublicKey.toBytesCompressed().toUnprefixedHexString();
-              final String abbrPublicKey = blsPublicKey.toAbbreviatedString();
               final URI secretsEndpoint =
                   URI.create(hashicorpApiEndpoint.toString() + "/data/" + publicKey).normalize();
               final String content =
                   getHashicorpYamlConfiguration(
                       secretsEndpoint, token, tlsKnownHosts, overrideVaultHost);
-              Path outputFile = outputDir.resolve(abbrPublicKey + ".yaml");
-              int counter = 1;
-              while (Files.exists(outputFile)) {
-                outputFile = outputDir.resolve(abbrPublicKey + "-" + counter + ".yaml");
-                counter++;
-              }
+              var outputFileName = BLSKeyGenerator.secureRandomString();
+              var outputFile = outputDir.resolve(outputFileName + ".yaml");
               try {
                 Files.writeString(outputFile, content);
               } catch (IOException e) {
@@ -103,13 +98,8 @@ public class Web3SignerYamlConfiguration {
                   "privateKey",
                   blsKeyPair.getSecretKey().toBytes().toHexString());
           final String content = new Yaml(DUMPER_OPTIONS).dump(map);
-          final String publicKey = blsKeyPair.getPublicKey().toAbbreviatedString();
-          Path outputFile = outputDir.resolve(publicKey + ".yaml");
-          int counter = 1;
-          while (Files.exists(outputFile)) {
-            outputFile = outputDir.resolve(publicKey + "-" + counter + ".yaml");
-            counter++;
-          }
+          var outputFileName = BLSKeyGenerator.secureRandomString();
+          var outputFile = outputDir.resolve(outputFileName + ".yaml");
           try {
             Files.writeString(outputFile, content);
           } catch (IOException e) {
