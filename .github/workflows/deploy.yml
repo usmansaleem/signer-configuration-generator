@@ -117,12 +117,14 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
+          context: .
+          file: ./dockerfile
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            TAR_FILE=./build/distributions/signer-configuration-generator-${{ needs.dist.outputs.project-version }}.tar.gz
+            TAR_FILE=build/distributions/signer-configuration-generator-${{ needs.dist.outputs.project-version }}.tar.gz
 
 
   release:
