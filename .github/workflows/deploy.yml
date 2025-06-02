@@ -3,15 +3,62 @@ name: deploy
 on:
   push:
     branches:
-      - "**"
+      - "main"
     tags:
       - "v*.*.*"
 
   pull_request:
 
 jobs:
+  dist:
+    runs-on: ubuntu-latest
+    outputs:
+      project-version: ${{ steps.project-version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      # workaround https://github.com/actions/checkout/issues/882
+      - run: git fetch --tags --force origin
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Create distribution
+        run: ./gradlew clean distTar
+
+      - name: Calculate Version
+        id: project-version
+        shell: bash
+        run: |
+          VERSION=$(./gradlew -q version | awk -F': ' '{print $2}')
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: distribution
+          path: build/distributions/signer-configuration-generator-${{ steps.project-version.outputs.version }}.tar.gz
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0 # no compression
+
+      - name: Show build context
+        run: |
+          ls -la build/distributions/
+          echo "Version: ${{ steps.project-version.outputs.version }}"
   docker:
     runs-on: ubuntu-latest
+    needs: dist
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,6 +72,7 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
+            usmans/w3s-conf-gen
             ghcr.io/usmansaleem/signer-configuration-generator
           # generate Docker tags based on the following events/attributes
           tags: |
@@ -43,45 +91,53 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Login to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - uses: actions/download-artifact@v4
+        with:
+          name: distribution
+          path: ./build/distributions/
+
+      - name: Show build context
+        run: |
+          ls -la build/distributions/
+          echo "Version: ${{ needs.dist.outputs.project-version }}"  
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
+          context: .
+          file: ./dockerfile
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            TAR_FILE=build/distributions/signer-configuration-generator-${{ needs.dist.outputs.project-version }}.tar.gz
+
 
   release:
     runs-on: ubuntu-latest
+    needs: dist
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
       contents: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
-          fetch-depth: 0
-          fetch-tags: true
-
-      - run: git fetch --tags --force origin #workaround https://github.com/actions/checkout/issues/882
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Build with Gradle
-        run: ./gradlew clean distTar
+          name: distribution
+          path: build/distributions/
 
       # Create release tag and attach the distribution
       # https://github.com/marketplace/actions/gh-release
