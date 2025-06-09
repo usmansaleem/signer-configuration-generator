@@ -61,7 +61,7 @@ public class HashicorpSubcommand implements Callable<Integer> {
   @CommandLine.Option(
       names = "--tls-knownhosts-file",
       description = "Path to tls known hosts file that needs to go in the configuration file.")
-  private Path tlsKnownHosts = Path.of("/var/config/knownhosts");
+  private Path tlsKnownHosts = null;
 
   @Override
   public Integer call() throws Exception {
