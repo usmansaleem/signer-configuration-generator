@@ -109,15 +109,25 @@ public class Web3SignerYamlConfiguration {
   }
 
   public void createKeystoreConfigurationFiles(
-      final Set<BLSKeyPair> blsKeyPairs, final Path keystoreDirInConfig) {
+      final Set<BLSKeyPair> blsKeyPairs,
+      final boolean generateConfig,
+      final Path keystoreDirInConfig,
+      final int kdfCounter) {
     // create password file first
     try {
-      Files.writeString(outputDir.resolve("password.txt"), "password");
+      var passwordFile = outputDir.resolve("password.txt");
+      Files.writeString(passwordFile, "password");
+      LOG.info("Created password file in {}", passwordFile);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
 
+    if (!generateConfig) {
+      LOG.info("Skipping configuration file generation");
+    }
+
     // create encrypted keystore files and configuration files
+    final AtomicInteger count = new AtomicInteger(0);
     blsKeyPairs.parallelStream()
         .forEach(
             blsKeyPair -> {
@@ -131,7 +141,8 @@ public class Web3SignerYamlConfiguration {
                     blsKeyPair.getSecretKey().toBytes(),
                     blsKeyPair.getPublicKey().toBytesCompressed(),
                     "password",
-                    outputDir.resolve(keystoreFileName));
+                    outputDir.resolve(keystoreFileName),
+                    kdfCounter);
               } catch (final IOException e) {
                 LOG.error(
                     "Unable to create keystore file: {}. Error: {}",
@@ -139,6 +150,14 @@ public class Web3SignerYamlConfiguration {
                     e.getMessage());
                 return;
               }
+
+              count.incrementAndGet();
+
+              if (!generateConfig) {
+                return;
+              }
+
+              // create configuration file
               var configFileMap =
                   Map.of(
                       "type",
@@ -163,18 +182,21 @@ public class Web3SignerYamlConfiguration {
                     "Error creating configuration file {}: {}", configFileName, e.getMessage());
               }
             });
+
+    LOG.info("Created {} keystore/configuration files in {}", count.get(), outputDir);
   }
 
   private void createKeyStoreFile(
       final Bytes privateKey,
       final Bytes publicKey,
       final String password,
-      final Path keyStoreFilePath)
+      final Path keyStoreFilePath,
+      final int kdfCounter)
       throws IOException {
     final Bytes salt = Bytes.random(32, BLSKeyGenerator.getSecureRandom());
     final Bytes iv = Bytes.random(16, BLSKeyGenerator.getSecureRandom());
-    final int counter = 65536; // 2^16
-    final KdfParam kdfParam = new Pbkdf2Param(32, counter, HMAC_SHA256, salt);
+    // final int counter = 65536; // 2^16
+    final KdfParam kdfParam = new Pbkdf2Param(32, kdfCounter, HMAC_SHA256, salt);
     final Cipher cipher = new Cipher(CipherFunction.AES_128_CTR, iv);
     final KeyStoreData keyStoreData =
         KeyStore.encrypt(privateKey, publicKey, password, "", kdfParam, cipher);

@@ -43,6 +43,21 @@ public class KeystoresSubcommand implements Callable<Integer> {
       description = "Number of keys to generate and insert. Default: ${DEFAULT-VALUE}")
   int count = 50;
 
+  @Option(
+      names = "--kdf-counter",
+      description = "Iterative count for KDF (Key Derivation Function). Default: ${DEFAULT-VALUE}",
+      paramLabel = "<NUMBER>",
+      defaultValue = "16")
+  int kdfCounter = 16;
+
+  @Option(
+      names = "--generate-config",
+      negatable = true,
+      defaultValue = "true",
+      fallbackValue = "true",
+      description = "Generate Web3Signer configuration files. Default: ${DEFAULT-VALUE}")
+  boolean generateConfig;
+
   @Override
   public Integer call() {
     LOG.info("Generating {} BLS Keys", count);
@@ -50,7 +65,8 @@ public class KeystoresSubcommand implements Callable<Integer> {
 
     LOG.info("Creating Web3Signer configuration files and keystores in {}", outputDir);
     new Web3SignerYamlConfiguration(outputDir)
-        .createKeystoreConfigurationFiles(blsKeyPairs, outputDirInConfig);
+        .createKeystoreConfigurationFiles(
+            blsKeyPairs, generateConfig, outputDirInConfig, kdfCounter);
     return 0;
   }
 }
